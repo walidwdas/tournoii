@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -272,6 +271,32 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin-left: 10px;
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -333,6 +358,8 @@
             </div>
 
             <div id="gestion" class="tab-content">
+                <div id="successMessage" class="success-message">✓ Résultat enregistré avec succès !</div>
+                
                 <div class="add-result-form">
                     <h2 style="margin-bottom: 20px; color: #2a5298;">Ajouter un résultat</h2>
                     <div class="form-group">
@@ -351,7 +378,10 @@
                         <label>Score Équipe 2</label>
                         <input type="number" id="score2" min="0" value="0">
                     </div>
-                    <button class="btn" onclick="ajouterResultat()">Enregistrer le résultat</button>
+                    <div class="action-buttons">
+                        <button class="btn" onclick="ajouterResultat()">Enregistrer le résultat</button>
+                        <button class="btn btn-danger" onclick="reinitialiserTournoi()">Réinitialiser tout</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -369,55 +399,77 @@
         ];
 
         let stats = {};
-        equipes.forEach(e => {
-            stats[e] = {
-                matchesJoues: 0,
-                victoires: 0,
-                nuls: 0,
-                defaites: 0,
-                butsMarques: 0,
-                butsEncaisses: 0,
-                points: 0
-            };
-        });
+        let calendrier = [];
 
-        const calendrier = [
-            { semaine: 1, matches: [
-                {equipe1: "Équipe Alpha", equipe2: "Équipe Beta", score1: null, score2: null},
-                {equipe1: "Équipe Gamma", equipe2: "Équipe Delta", score1: null, score2: null},
-                {equipe1: "Équipe Epsilon", equipe2: "Équipe Zeta", score1: null, score2: null}
-            ]},
-            { semaine: 2, matches: [
-                {equipe1: "Équipe Eta", equipe2: "Équipe Alpha", score1: null, score2: null},
-                {equipe1: "Équipe Beta", equipe2: "Équipe Gamma", score1: null, score2: null},
-                {equipe1: "Équipe Delta", equipe2: "Équipe Epsilon", score1: null, score2: null}
-            ]},
-            { semaine: 3, matches: [
-                {equipe1: "Équipe Zeta", equipe2: "Équipe Beta", score1: null, score2: null},
-                {equipe1: "Équipe Alpha", equipe2: "Équipe Gamma", score1: null, score2: null},
-                {equipe1: "Équipe Eta", equipe2: "Équipe Delta", score1: null, score2: null}
-            ]},
-            { semaine: 4, matches: [
-                {equipe1: "Équipe Epsilon", equipe2: "Équipe Alpha", score1: null, score2: null},
-                {equipe1: "Équipe Gamma", equipe2: "Équipe Zeta", score1: null, score2: null},
-                {equipe1: "Équipe Beta", equipe2: "Équipe Eta", score1: null, score2: null}
-            ]},
-            { semaine: 5, matches: [
-                {equipe1: "Équipe Delta", equipe2: "Équipe Alpha", score1: null, score2: null},
-                {equipe1: "Équipe Epsilon", equipe2: "Équipe Gamma", score1: null, score2: null},
-                {equipe1: "Équipe Zeta", equipe2: "Équipe Eta", score1: null, score2: null}
-            ]},
-            { semaine: 6, matches: [
-                {equipe1: "Équipe Alpha", equipe2: "Équipe Zeta", score1: null, score2: null},
-                {equipe1: "Équipe Beta", equipe2: "Équipe Delta", score1: null, score2: null},
-                {equipe1: "Équipe Gamma", equipe2: "Équipe Eta", score1: null, score2: null}
-            ]},
-            { semaine: 7, matches: [
-                {equipe1: "Équipe Epsilon", equipe2: "Équipe Beta", score1: null, score2: null},
-                {equipe1: "Équipe Delta", equipe2: "Équipe Gamma", score1: null, score2: null},
-                {equipe1: "Équipe Eta", equipe2: "Équipe Epsilon", score1: null, score2: null}
-            ]}
-        ];
+        function initialiserCalendrier() {
+            return [
+                { semaine: 1, matches: [
+                    {equipe1: "Équipe Alpha", equipe2: "Équipe Beta", score1: null, score2: null},
+                    {equipe1: "Équipe Gamma", equipe2: "Équipe Delta", score1: null, score2: null},
+                    {equipe1: "Équipe Epsilon", equipe2: "Équipe Zeta", score1: null, score2: null}
+                ]},
+                { semaine: 2, matches: [
+                    {equipe1: "Équipe Eta", equipe2: "Équipe Alpha", score1: null, score2: null},
+                    {equipe1: "Équipe Beta", equipe2: "Équipe Gamma", score1: null, score2: null},
+                    {equipe1: "Équipe Delta", equipe2: "Équipe Epsilon", score1: null, score2: null}
+                ]},
+                { semaine: 3, matches: [
+                    {equipe1: "Équipe Zeta", equipe2: "Équipe Beta", score1: null, score2: null},
+                    {equipe1: "Équipe Alpha", equipe2: "Équipe Gamma", score1: null, score2: null},
+                    {equipe1: "Équipe Eta", equipe2: "Équipe Delta", score1: null, score2: null}
+                ]},
+                { semaine: 4, matches: [
+                    {equipe1: "Équipe Epsilon", equipe2: "Équipe Alpha", score1: null, score2: null},
+                    {equipe1: "Équipe Gamma", equipe2: "Équipe Zeta", score1: null, score2: null},
+                    {equipe1: "Équipe Beta", equipe2: "Équipe Eta", score1: null, score2: null}
+                ]},
+                { semaine: 5, matches: [
+                    {equipe1: "Équipe Delta", equipe2: "Équipe Alpha", score1: null, score2: null},
+                    {equipe1: "Équipe Epsilon", equipe2: "Équipe Gamma", score1: null, score2: null},
+                    {equipe1: "Équipe Zeta", equipe2: "Équipe Eta", score1: null, score2: null}
+                ]},
+                { semaine: 6, matches: [
+                    {equipe1: "Équipe Alpha", equipe2: "Équipe Zeta", score1: null, score2: null},
+                    {equipe1: "Équipe Beta", equipe2: "Équipe Delta", score1: null, score2: null},
+                    {equipe1: "Équipe Gamma", equipe2: "Équipe Eta", score1: null, score2: null}
+                ]},
+                { semaine: 7, matches: [
+                    {equipe1: "Équipe Epsilon", equipe2: "Équipe Beta", score1: null, score2: null},
+                    {equipe1: "Équipe Delta", equipe2: "Équipe Gamma", score1: null, score2: null},
+                    {equipe1: "Équipe Eta", equipe2: "Équipe Epsilon", score1: null, score2: null}
+                ]}
+            ];
+        }
+
+        async function sauvegarderDonnees() {
+            try {
+                await window.storage.set('calendrier_tournoi', JSON.stringify(calendrier), false);
+                console.log('✓ Données sauvegardées avec succès');
+            } catch (error) {
+                console.error('✗ Erreur lors de la sauvegarde:', error);
+            }
+        }
+
+        async function chargerDonnees() {
+            try {
+                const result = await window.storage.get('calendrier_tournoi', false);
+                if (result && result.value) {
+                    calendrier = JSON.parse(result.value);
+                    console.log('✓ Données chargées avec succès');
+                    return true;
+                } else {
+                    console.log('ℹ Aucune donnée trouvée, initialisation du calendrier');
+                    calendrier = initialiserCalendrier();
+                    await sauvegarderDonnees();
+                    return true;
+                }
+            } catch (error) {
+                console.log('ℹ Première utilisation, initialisation du calendrier');
+                calendrier = initialiserCalendrier();
+                await sauvegarderDonnees();
+                return true;
+            }
+        }
 
         function calculerStats() {
             equipes.forEach(e => {
@@ -568,11 +620,11 @@
             const sem = calendrier.find(s => s.semaine === semaine);
             
             matchSelect.innerHTML = sem.matches.map((m, i) => 
-                `<option value="${i}">${m.equipe1} vs ${m.equipe2}</option>`
+                `<option value="${i}">${m.equipe1} vs ${m.equipe2}${m.score1 !== null ? ' (' + m.score1 + '-' + m.score2 + ')' : ''}</option>`
             ).join('');
         }
 
-        function ajouterResultat() {
+        async function ajouterResultat() {
             const semaine = parseInt(document.getElementById('semaine').value);
             const matchIndex = parseInt(document.getElementById('matchSelect').value);
             const score1 = parseInt(document.getElementById('score1').value);
@@ -582,10 +634,32 @@
             sem.matches[matchIndex].score1 = score1;
             sem.matches[matchIndex].score2 = score2;
 
-            alert('Résultat enregistré avec succès !');
+            await sauvegarderDonnees();
+
+            const successMsg = document.getElementById('successMessage');
+            successMsg.style.display = 'block';
+            setTimeout(() => {
+                successMsg.style.display = 'none';
+            }, 3000);
+
             afficherClassement();
             afficherCalendrier();
             afficherResultats();
+            chargerMatchs();
+        }
+
+        async function reinitialiserTournoi() {
+            if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les résultats ? Cette action est irréversible.')) {
+                calendrier = initialiserCalendrier();
+                await sauvegarderDonnees();
+                
+                afficherClassement();
+                afficherCalendrier();
+                afficherResultats();
+                initialiserGestion();
+                
+                alert('Le tournoi a été réinitialisé avec succès !');
+            }
         }
 
         function showTab(tabName) {
@@ -600,10 +674,17 @@
             if (tabName === 'resultats') afficherResultats();
         }
 
-        afficherClassement();
-        afficherCalendrier();
-        afficherResultats();
-        initialiserGestion();
+        async function init() {
+            console.log('🏁 Initialisation du tournoi...');
+            await chargerDonnees();
+            afficherClassement();
+            afficherCalendrier();
+            afficherResultats();
+            initialiserGestion();
+            console.log('✓ Tournoi initialisé avec succès');
+        }
+
+        init();
     </script>
 </body>
 </html>
